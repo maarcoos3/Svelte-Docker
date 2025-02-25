@@ -1,51 +1,60 @@
 <script>
-    import { onMount } from 'svelte';
-    import * as d3 from 'd3';
+    import { onDestroy } from 'svelte';
+    import { dataBySurvivingByEmbarked } from '../stores_titanic.js';
+    import { select, scaleBand, scaleLinear, max, axisBottom, axisLeft } from 'd3';
   
-    let data = [];
-    const width = 500, height = 400;
-    const margin = { top: 20, right: 20, bottom: 50, left: 50 };
+    let chartData = null;
+    let unsubscribe;
   
-    onMount(async () => {
-      // Cargar el CSV y convertir los tipos
-      data = await d3.csv('/data/Titanic-Dataset.csv', d3.autoType);
+    // Nos suscribimos al store derivado de datos agrupados por puerto
+    unsubscribe = dataBySurvivingByEmbarked.subscribe(d => {
+      chartData = d;
+      console.log("Datos para EmbarkedStats:", chartData);
       drawChart();
     });
   
-    function drawChart() {
-      // Limpiar el contenedor en caso de recarga
-      d3.select('#embarkedchart').selectAll('svg').remove();
+    const width = 500, height = 400;
+    const margin = { top: 20, right: 20, bottom: 50, left: 50 };
   
-      const svg = d3.select('#embarkedchart')
+    function drawChart() {
+      const container = document.getElementById('embarkedchart');
+      if (!container) return;
+      container.innerHTML = ''; // Limpiar contenido previo
+  
+      const svg = select(container)
         .append('svg')
         .attr('width', width)
         .attr('height', height);
   
-      // Calcular el número de pasajeros por puerto de embarque
-      const counts = d3.rollups(
-        data,
-        v => v.length,
-        d => d.Embarked
-      );
+      // Verificar que chartData y chartData.data existan
+      if (!chartData || !chartData.data) return;
+      
+      // Convertir chartData.data al formato: [{ Puerto, count }, ...]
+      const grouped = chartData.data.map(d => ({
+        Puerto: d.Puerto,
+        count: d.count
+      })).filter(d => ['C', 'Q', 'S'].includes(d.Puerto));
   
-      // Filtrar solo para los puertos 
-      const filtered = counts.filter(d => ['C', 'Q', 'S'].includes(d[0]));
+      // Calcular el máximo, asignando un valor mínimo para evitar NaN
+      const maxCountValue = max(grouped, d => d.count) || 0;
+      const yDomainMax = maxCountValue === 0 ? 1 : maxCountValue;
   
-      // Escala para el eje X (categorías)
-      const xScale = d3.scaleBand()
-        .domain(filtered.map(d => d[0]))
+      // Escala para el eje X: los puertos
+      const xScale = scaleBand()
+        .domain(grouped.map(d => d.Puerto))
         .range([margin.left, width - margin.right])
         .padding(0.1);
   
-      // Escala para el eje Y (cuentas)
-      const yScale = d3.scaleLinear()
-        .domain([0, d3.max(filtered, d => d[1])])
+      // Escala para el eje Y: cantidad de pasajeros
+      const yScale = scaleLinear()
+        .domain([0, yDomainMax])
+        .nice()
         .range([height - margin.bottom, margin.top]);
   
       // Eje X
       svg.append('g')
-        .attr('transform', `translate(0,${height - margin.bottom})`)
-        .call(d3.axisBottom(xScale))
+        .attr('transform', `translate(0, ${height - margin.bottom})`)
+        .call(axisBottom(xScale))
         .append('text')
         .attr('fill', 'black')
         .attr('x', width / 2)
@@ -55,8 +64,8 @@
   
       // Eje Y
       svg.append('g')
-        .attr('transform', `translate(${margin.left},0)`)
-        .call(d3.axisLeft(yScale))
+        .attr('transform', `translate(${margin.left}, 0)`)
+        .call(axisLeft(yScale))
         .append('text')
         .attr('fill', 'black')
         .attr('transform', 'rotate(-90)')
@@ -67,14 +76,14 @@
   
       // Dibujar las barras
       svg.selectAll('.bar')
-        .data(filtered)
+        .data(grouped)
         .enter()
         .append('rect')
         .attr('class', 'bar')
-        .attr('x', d => xScale(d[0]))
-        .attr('y', d => yScale(d[1]))
+        .attr('x', d => xScale(d.Puerto))
+        .attr('y', d => yScale(d.count))
         .attr('width', xScale.bandwidth())
-        .attr('height', d => height - margin.bottom - yScale(d[1]))
+        .attr('height', d => height - margin.bottom - yScale(d.count))
         .attr('fill', 'orange');
   
       // Añadir leyenda para los puertos de embarque
@@ -93,7 +102,7 @@
         .append('g')
         .attr('transform', (d, i) => `translate(0, ${i * 20})`)
         .each(function(d) {
-          const g = d3.select(this);
+          const g = select(this);
           g.append('rect')
             .attr('width', 15)
             .attr('height', 15)
@@ -106,6 +115,10 @@
             .attr('fill', 'black');
         });
     }
+  
+    onDestroy(() => {
+      unsubscribe();
+    });
   </script>
   
   <div id="embarkedchart"></div>
