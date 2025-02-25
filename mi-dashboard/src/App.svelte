@@ -12,7 +12,6 @@
     <Filter />
   </section>
 
-  <!-- Sección con dos gráficos en línea -->
   <section class="row">
     <div class="chart-container">
       <h2>Distribución de pasajeros por clase y supervivencia</h2>
@@ -24,7 +23,6 @@
     </div>
   </section>
 
-  <!-- Gráfico completo debajo -->
   <section class="full-chart">
     <h2>Estadísticas de embarque por ubicación</h2>
     <EmbarkedStats />
