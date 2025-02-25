@@ -8,7 +8,7 @@
 <main>
   <h1>Dashboard Titanic</h1>
 
-  <section>
+  <section class="filter-section">
     <Filter />
   </section>
 
@@ -25,7 +25,7 @@
   </section>
 
   <!-- Gráfico completo debajo -->
-  <section>
+  <section class="full-chart">
     <h2>Estadísticas de embarque por ubicación</h2>
     <EmbarkedStats />
   </section>
@@ -37,17 +37,43 @@
     margin: 0 auto;
     padding: 20px;
   }
+  
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .filter-section {
+    margin-bottom: 20px;
+  }
+  
+  /* Sección con dos gráficos en línea */
   .row {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
     margin-bottom: 40px;
   }
+  
   .chart-container {
     flex: 1;
     min-width: 300px;
   }
+  
+  /* Gráfico que ocupa todo el ancho */
+  .full-chart {
+    width: 100%;
+  }
+  
   section h2 {
     margin-bottom: 10px;
+    font-size: 1.2rem;
+  }
+  
+  /* Media query para pantallas pequeñas */
+  @media (max-width: 768px) {
+    .row {
+      flex-direction: column;
+    }
   }
 </style>
