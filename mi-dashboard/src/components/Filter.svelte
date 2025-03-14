@@ -1,7 +1,6 @@
 <script>
     import { filters } from "../stores_titanic.js";
     
-    // Utilizamos $filters para acceder al valor actual del store
     function toggleFilter(key) {
       filters.update(f => ({ ...f, [key]: !f[key] }));
     }

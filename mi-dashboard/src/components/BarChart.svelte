@@ -10,7 +10,6 @@
   const width = 600, height = 400;
   const margin = { top: 20, right: 20, bottom: 50, left: 50 };
 
-  // Suscribirse a los stores
   unsubscribeData = dataTitanic.subscribe(data => {
     rawData = data;
     drawChart();
@@ -21,14 +20,10 @@
   });
 
   function drawChart() {
-    // Limpiar el contenedor
     const container = document.getElementById('barchart');
     if (!container) return;
     container.innerHTML = '';
 
-    // Aplicar filtros:
-    // Para cada criterio: si el filtro es "true" (por ejemplo, $filters.male), se acepta;
-    // si es false, se descarta. En este ejemplo usamos filtros booleanos para sexo, clase y puerto.
     const filteredData = rawData.filter(d => {
       const passSex = (currentFilters.male && d.Sex === 'male') ||
                       (currentFilters.female && d.Sex === 'female');
@@ -38,12 +33,9 @@
       const passPort = (currentFilters.pC && d.Embarked === 'C') ||
                        (currentFilters.pS && d.Embarked === 'S') ||
                        (currentFilters.pQ && d.Embarked === 'Q');
-      // Se puede incluir otros filtros (por ejemplo, rango de edad) si se agregan al store
       return d.Age !== null && d.Survived !== null && passSex && passClass && passPort;
     });
 
-    // Agrupar por clase y supervivencia
-    // rollups devuelve un array: [ [Pclass, Map( {Survived => count} )], ... ]
     const grouped = rollups(
       filteredData,
       v => v.length,
@@ -57,25 +49,21 @@
       }));
     });
 
-    // Definir dominios: las clases disponibles (ordenadas) y los estados de supervivencia
     const classes = Array.from(new Set(grouped.map(d => d.Pclass))).sort((a, b) => a - b);
     const survStates = [0, 1];
 
-    // Escala horizontal para las clases
     const x0 = scaleBand()
       .domain(classes)
       .range([margin.left, width - margin.right])
       .paddingInner(0.2);
 
-    // Escala interna para cada estado dentro de la clase
     const x1 = scaleBand()
       .domain(survStates)
       .range([0, x0.bandwidth()])
       .padding(0.05);
 
-    // Escala vertical para la cantidad
     const yScale = scaleLinear()
-      .domain([0, max(grouped, d => d.count) || 1]).nice() // valor por defecto 1 para evitar NaN
+      .domain([0, max(grouped, d => d.count) || 1]).nice() 
       .range([height - margin.bottom, margin.top]);
 
     const svg = select(container)

@@ -7,7 +7,6 @@
     let chartData = null;
     let unsubscribe;
   
-    // Suscribirse al store derivado que agrupa los sobrevivientes por sexo
     unsubscribe = dataBySurvivingBySex.subscribe(d => {
       chartData = d;
       console.log("Datos para ScatterPlot:", chartData);
@@ -20,31 +19,25 @@
     function drawChart() {
       const container = document.getElementById('scatterchart');
       if (!container) return;
-      container.innerHTML = ''; // Limpiar contenido previo
+      container.innerHTML = ''; 
   
       const svg = select(container)
         .append('svg')
         .attr('width', width)
         .attr('height', height);
   
-      // Verificar que chartData y chartData.data existan
       if (!chartData || !chartData.data) return;
   
-      // Aplanar los datos: generar un array de sobrevivientes con la información de cada sexo
-      // Suponemos que chartData.data tiene la forma:
-      // [ { Sex: 'male', Values: [ { Age, ... }, ... ], count: X }, { Sex: 'female', Values: [...] } ]
       const flatData = chartData.data.flatMap(d =>
         d.Values.map(v => ({ ...v, Sex: d.Sex }))
       );
   
-      // Escala X: edad (calculada a partir del extent de flatData)
       const xExtent = d3.extent(flatData, d => d.Age);
       const xScale = scaleLinear()
         .domain(xExtent)
         .nice()
         .range([margin.left, width - margin.right]);
   
-      // Escala Y: sexo (usamos scalePoint para posicionar "male" y "female")
       const yScale = scalePoint()
         .domain(['male', 'female'])
         .range([height - margin.bottom, margin.top])

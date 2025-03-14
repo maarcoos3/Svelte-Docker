@@ -6,7 +6,6 @@
     let chartData = null;
     let unsubscribe;
   
-    // Nos suscribimos al store derivado de datos agrupados por puerto
     unsubscribe = dataBySurvivingByEmbarked.subscribe(d => {
       chartData = d;
       console.log("Datos para EmbarkedStats:", chartData);
@@ -19,33 +18,28 @@
     function drawChart() {
       const container = document.getElementById('embarkedchart');
       if (!container) return;
-      container.innerHTML = ''; // Limpiar contenido previo
+      container.innerHTML = ''; 
   
       const svg = select(container)
         .append('svg')
         .attr('width', width)
         .attr('height', height);
   
-      // Verificar que chartData y chartData.data existan
       if (!chartData || !chartData.data) return;
       
-      // Convertir chartData.data al formato: [{ Puerto, count }, ...]
       const grouped = chartData.data.map(d => ({
         Puerto: d.Puerto,
         count: d.count
       })).filter(d => ['C', 'Q', 'S'].includes(d.Puerto));
   
-      // Calcular el máximo, asignando un valor mínimo para evitar NaN
       const maxCountValue = max(grouped, d => d.count) || 0;
       const yDomainMax = maxCountValue === 0 ? 1 : maxCountValue;
   
-      // Escala para el eje X: los puertos
       const xScale = scaleBand()
         .domain(grouped.map(d => d.Puerto))
         .range([margin.left, width - margin.right])
         .padding(0.1);
   
-      // Escala para el eje Y: cantidad de pasajeros
       const yScale = scaleLinear()
         .domain([0, yDomainMax])
         .nice()
